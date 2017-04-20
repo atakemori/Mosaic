@@ -35,13 +35,17 @@ class ImageBox(object):
     self.botRightX = im.width
     self.botRightY = im.height
 
+  def botRightQuad(self):
+    return ((self.botRightX / 2, self.botRightY / 2, 
+            self.botRightX, self.botRightY))
+
 
 
 
 class ColorDict(object):
   """
-  Builds a dictionary containing the color values
-  and names of the pictures in the PIC_DIR folder.
+  "Builds a dictionary containing the color values
+  "and names of the pictures in the PIC_DIR folder.
   """
   def __init__(self):
     self.dict = {}
@@ -52,11 +56,22 @@ class ColorDict(object):
     #Iterate through files to build color data and add to dict
     for filename in os.listdir(PIC_DIR):
       im = Image.open(PIC_DIR + "/" + filename)
-      #im.show()
-      im.crop((0, 0, im.width / 2, im.height / 2)).show()
-      print im.getpixel((0, 0))
-      print im.getpixel((1, 1))
+      #im.getpixel((0, 0))
+      im2 = im.crop((0, im.height / 2, im.width / 2, im.height))      
+      #im2 = im.crop((im.width / 2, im.height / 2, im.width, im.height))
+      #im2 = im.crop((0, 0, im.width / 2, im.height / 2))
+      im2 = im2.resize((1, 1))
+      im2 = im2.resize((im.width/2, im.height / 2))
+      im.paste(im2, (0, im.height / 2))
+      im.show()
 
+      im3 = im.resize((2, 2))
+      im3 = im3.resize((im.width, im.height))
+      im3.show()
+
+
+
+      break
       
 
 
