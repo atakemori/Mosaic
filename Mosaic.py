@@ -28,8 +28,8 @@ X_DENSITY = 10
 
 class ImageBox(object):
   """
-  Takes in an image and returns tuples that correspond
-  to the coordinates required for quandrants and edges
+  "Takes in an image and returns tuples that correspond
+  "to the coordinates required for quandrants and edges
   """
   def __init__(self, media_image):
     im = media_image
@@ -44,7 +44,7 @@ class ImageBox(object):
 
 
 
-
+#may not need to be an object
 class ColorDict(object):
   """
   "Builds a dictionary containing the color values
@@ -54,7 +54,7 @@ class ColorDict(object):
     self.dict = {}
     print "Path Valid: " + str(os.path.isdir(PICTURE_DIR))
     #Count the number of files to do for progress bar as int totNum
-    ##Also ends up counting directories as files...
+    #  Also ends up counting directories as files...
     totNum = len(os.listdir(PICTURE_DIR))
     global MEDIA_HEIGHT, MEDIA_WIDTH
     #Iterate through files to build color data and add to dict
@@ -75,11 +75,23 @@ def pixelate_target():
   newMediaHeight = MEDIA_HEIGHT / X_DENSITY
 
   im2 = im.resize((2 * X_DENSITY, 2 * (im.height / newMediaHeight)))
-  im2 = im2.resize((im.width, im.height))
-  im2.show()
+  im3 = im2.resize((im.width, im.height))
+  
+  targetData = [[0 for x in range(im2.height)] for y in range(im2.width)]
+
+  #Starts tracking target color data from top left, 
+  #  travels down the y, and the across x
+  for x in range(im2.width):
+    for y in range(im2.height):
+      targetData[x][y] = im2.getpixel((x, y))
+
+  return targetData
 
 
-  im.getpixel((im.width / 4, im.height / 4))
+  
+
+  #print len(targetData[0])
+  #im.getpixel((im.width / 4, im.height / 4))
 
 
   #USE 2 for loops to got through the image (offset by a quarter media image
@@ -101,7 +113,11 @@ def main():
 
   color_dict = ColorDict()
 
-  pixelate_target()
+  #TODO: pixelate_target should be passed the target location instead of assuming
+  target_array = pixelate_target()
+
+  find
+
 
 
 
