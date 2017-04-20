@@ -15,9 +15,12 @@ import random
 import PIL
 from PIL import Image
 
-PIC_DIR = "./media"
+PICTURE_DIR = "./media"
+TARGET_PIC = "./target.jpg"
+MEDIA_HEIGHT = -1
+MEDIA_WIDTH = -1
 
-
+X_DENSITY = 10
 
 
 
@@ -49,16 +52,39 @@ class ColorDict(object):
   """
   def __init__(self):
     self.dict = {}
-    print "Path Valid: " + str(os.path.isdir(PIC_DIR))
+    print "Path Valid: " + str(os.path.isdir(PICTURE_DIR))
     #Count the number of files to do for progress bar as int totNum
     ##Also ends up counting directories as files...
-    totNum = len(os.listdir(PIC_DIR))
+    totNum = len(os.listdir(PICTURE_DIR))
+    global MEDIA_HEIGHT, MEDIA_WIDTH
     #Iterate through files to build color data and add to dict
-    for filename in os.listdir(PIC_DIR):
-      im = Image.open(PIC_DIR + "/" + filename)
+    for filename in os.listdir(PICTURE_DIR):
+      im = Image.open(PICTURE_DIR + "/" + filename)
+
+      MEDIA_WIDTH = im.width
+      MEDIA_HEIGHT = im.height
 
       im = im.resize((2, 2))
       self.dict[filename] = list(im.getdata())
+
+
+def pixelate_target():
+  im = Image.open(TARGET_PIC)
+  targetWidth = im.width / X_DENSITY
+  newMediaWidth = MEDIA_WIDTH / X_DENSITY
+  newMediaHeight = MEDIA_HEIGHT / X_DENSITY
+
+  im2 = im.resize((2 * X_DENSITY, 2 * (im.height / newMediaHeight)))
+  im2 = im2.resize((im.width, im.height))
+  im2.show()
+
+
+  im.getpixel((im.width / 4, im.height / 4))
+
+
+  #USE 2 for loops to got through the image (offset by a quarter media image
+  #vI think), and use some box approximation for best color in that location
+  #and organize the results in a 2D array.u
 
 
 
@@ -68,11 +94,15 @@ class ColorDict(object):
 def main():
   sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
   options = sys.argv
-  if len(options) > 1:
-    PIC_DIR = len[1]
+  if len(options) > 2:
+    TARGET_PIC = len[1]
+  if len(options) > 3:
+    PICTURE_DIR = len[2]
 
   color_dict = ColorDict()
-  print color_dict.dict
+
+  pixelate_target()
+
 
 
 
