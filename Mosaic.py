@@ -20,7 +20,9 @@ TARGET_PIC = "./target.jpg"
 MEDIA_HEIGHT = -1
 MEDIA_WIDTH = -1
 
-X_DENSITY = 10
+X_DENSITY = 20
+
+SCALE_RATIO = 10
 
 
 
@@ -71,12 +73,20 @@ class ColorDict(object):
 def pixelate_target():
   im = Image.open(TARGET_PIC)
   targetWidth = im.width / X_DENSITY
-  newMediaWidth = MEDIA_WIDTH / X_DENSITY
-  newMediaHeight = MEDIA_HEIGHT / X_DENSITY
+  targetPerspective = im.width / (im.height * 1.0)
+  mediaPerspective = MEDIA_WIDTH / (MEDIA_HEIGHT * 1.0)
+  print im
 
-  im2 = im.resize((2 * X_DENSITY, 2 * (im.height / newMediaHeight)))
+  newMediaWidth = targetWidth
+  newMediaHeight = int(newMediaWidth * mediaPerspective)
+  print newMediaWidth, newMediaHeight
+
+  #im2 = im.resize((2 * X_DENSITY, 2 * (im.height / newMediaHeight)))
+  im2 = im.resize((2 * X_DENSITY, 2 * int(X_DENSITY / targetPerspective)))
   im3 = im2.resize((im.width, im.height))
-  
+  print im2
+
+
   targetData = [[0 for x in range(im2.height)] for y in range(im2.width)]
 
   #Starts tracking target color data from top left, 
@@ -116,16 +126,8 @@ def main():
   #TODO: pixelate_target should be passed the target location instead of assuming
   target_array = pixelate_target()
 
-  find
+  #find_matches(color_dict.dict, target_array)
 
-
-
-
-
-
-  #end = False
-  #while not end:
-  #  end = input("End? ")
 
 
 if __name__ == '__main__':
