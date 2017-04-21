@@ -12,8 +12,11 @@ import sys
 import os
 import random
 
+import numpy
 import PIL
 from PIL import Image
+
+
 
 PICTURE_DIR = "./media"
 TARGET_PIC = "./target.jpg"
@@ -71,6 +74,19 @@ class ColorDict(object):
       self.dict[filename] = list(im.getdata())
 
 
+      """
+      print filename
+      print im.getpixel((0,0)),
+      print im.getpixel((1,0))
+      print im.getpixel((0,1)),
+      print im.getpixel((1,1))
+      im.resize((40, 40)).show()
+      print self.dict[filename]
+
+      break
+      """
+
+
 #Eventually do at sizes large enough where perspectives are
 ##easily divisible so perspectives stay relatively similar
 def pixelate_target():
@@ -89,7 +105,7 @@ def pixelate_target():
   print im2
 
 
-  targetData = [[0 for x in range(im2.height)] for y in range(im2.width)]
+  targetData = [[0 for y in range(im2.height)] for x in range(im2.width)]
 
   #Starts tracking target color data from top left, 
   #  travels down the y, and the across x
@@ -98,13 +114,46 @@ def pixelate_target():
       targetData[x][y] = im2.getpixel((x, y))
   return targetData
 
+
+def media_key():
+  pass
+#Prime for optimizing later ESPECIALLY SINCE I DONT THINK I NEED TO USE
+##ALL THESE DICTS
+#or maybe not pass the media_dict
+def closest_pic(media_dict, target_tup):
+  new_dict = {}
+  for pair in media_dict.items():
+    new_value = 0
+    for i in range(len(target_tup)):
+      #print target_tup, pair[1]
+      a = list(numpy.subtract(target_tup[i], pair[1][i]))
+      a = list(map(lambda x: x * x, a))
+      a = reduce(lambda x, y: x + y, a)
+      new_value += a
+    #print new_value
+    new_dict[new_value] = pair[0]
+  #new_dict.values().sort()[0]
+  #print new_dict.items()
+  #b = list(sorted(new_dict.items()))
+  #print list(sorted(new_dict.items()))[0][1]
+  return list(sorted(new_dict.items()))[0][1]
+  #print b[0], b[-1]
+
+
+
+#   media_dict.get(num, data[min(data.keys(), key=lambda k: abs(k-num))])
 def find_matches(media_dict, target_array):
+  final_name_array = [[0 for y in range(len(target_array[0]) / 2)]
+                         for y in range(len(target_array) / 2)]
   for x in range(len(target_array))[::2]:
     for y in range(len(target_array[0]))[::2]:
-      pass
+      a = (target_array[x][y], target_array[x+1][y],
+           target_array[x][y+1], target_array[x+1][y+1])
+      final_name_array[x / 2][y / 2] = closest_pic(media_dict, a)
+      print ".",
+    print "."
+  print final_name_array
 
-  pass
-  
 
   #print len(targetData[0])
   #im.getpixel((im.width / 4, im.height / 4))
