@@ -66,23 +66,25 @@ class ColorDict(object):
       MEDIA_WIDTH = im.width
       MEDIA_HEIGHT = im.height
 
+      #However it's done, it needs to end up with 4 colored quadrants
       im = im.resize((2, 2))
       self.dict[filename] = list(im.getdata())
 
 
+#Eventually do at sizes large enough where perspectives are
+##easily divisible so perspectives stay relatively similar
 def pixelate_target():
   im = Image.open(TARGET_PIC)
-  targetWidth = im.width / X_DENSITY
-  targetPerspective = im.width / (im.height * 1.0)
-  mediaPerspective = MEDIA_WIDTH / (MEDIA_HEIGHT * 1.0)
-  print im
+  targetWidth = im.width / X_DENSITY #a
+  #targetHeight = im.height / SCALE_RATIO
+  #targetPerspective = im.width / (im.height * 1.0)
+  mediaPerspective = (MEDIA_HEIGHT * 1.0) / MEDIA_WIDTH #c
 
   newMediaWidth = targetWidth
-  newMediaHeight = int(newMediaWidth * mediaPerspective)
+  newMediaHeight = int(newMediaWidth * mediaPerspective) #b
   print newMediaWidth, newMediaHeight
 
-  #im2 = im.resize((2 * X_DENSITY, 2 * (im.height / newMediaHeight)))
-  im2 = im.resize((2 * X_DENSITY, 2 * int(X_DENSITY / targetPerspective)))
+  im2 = im.resize((2 * X_DENSITY, 2 * int(im.height / newMediaHeight)))
   im3 = im2.resize((im.width, im.height))
   print im2
 
@@ -94,10 +96,14 @@ def pixelate_target():
   for x in range(im2.width):
     for y in range(im2.height):
       targetData[x][y] = im2.getpixel((x, y))
-
   return targetData
 
+def find_matches(media_dict, target_array):
+  for x in range(len(target_array))[::2]:
+    for y in range(len(target_array[0]))[::2]:
+      pass
 
+  pass
   
 
   #print len(targetData[0])
@@ -126,7 +132,7 @@ def main():
   #TODO: pixelate_target should be passed the target location instead of assuming
   target_array = pixelate_target()
 
-  #find_matches(color_dict.dict, target_array)
+  find_matches(color_dict.dict, target_array)
 
 
 
