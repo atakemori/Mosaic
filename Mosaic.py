@@ -30,9 +30,9 @@ NEW_MEDIA_WIDTH = "d"
 NEW_MEDIA_HEIGHT = "b"
 
 
-X_DENSITY = 20
+X_DENSITY = 30
 
-SCALE = 20
+SCALE = 10
 
 
 
@@ -96,7 +96,7 @@ class ColorDict(object):
       print "Media Dictionary Updated"
 
 
-
+#TODO if final img large, split into quads with another for loop
 def display_final_img(final_array):
   #im = Image.open(PICTURE_DIR + "/" + ******)
   global NEW_MEDIA_HEIGHT, NEW_MEDIA_WIDTH
@@ -115,6 +115,7 @@ def display_final_img(final_array):
       coor = (x * NEW_MEDIA_WIDTH, y * NEW_MEDIA_HEIGHT)
 
       final_image.paste(im, coor)
+  final_image.save("current.jpg")
   final_image.show()
 
 
@@ -183,8 +184,8 @@ def find_matches(media_dict, target_array):
       a = (target_array[x][y], target_array[x+1][y],
            target_array[x][y+1], target_array[x+1][y+1])
       final_name_array[x / 2][y / 2] = closest_pic(media_dict, a)
-      print ".",
-    print "."
+    if x % (len(target_array) / 10) == 0: print ".",
+    
   print final_name_array
   return final_name_array
 
