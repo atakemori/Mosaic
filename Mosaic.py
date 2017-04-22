@@ -29,10 +29,13 @@ MEDIA_PERSPECTIVE = "c"
 NEW_MEDIA_WIDTH = "d"
 NEW_MEDIA_HEIGHT = "b"
 
+SCANNED_WIDTH = -1
+SCANNED_HEIGHT = -1
 
-X_DENSITY = 30
 
-SCALE = 10
+X_DENSITY = 20
+
+SCALE = 2
 
 
 
@@ -97,24 +100,25 @@ class ColorDict(object):
 
 
 #TODO if final img large, split into quads with another for loop
-def display_final_img(final_array):
+def display_final_img(final_dict):
   #im = Image.open(PICTURE_DIR + "/" + ******)
   global NEW_MEDIA_HEIGHT, NEW_MEDIA_WIDTH
   NEW_MEDIA_WIDTH *= SCALE
   NEW_MEDIA_HEIGHT *= SCALE
 
-  final_width = len(final_array) * NEW_MEDIA_WIDTH
-  final_height = len(final_array[0]) * NEW_MEDIA_HEIGHT
+  final_width = SCANNED_WIDTH * NEW_MEDIA_WIDTH / 2
+  final_height = SCANNED_HEIGHT * NEW_MEDIA_HEIGHT / 2
 
   final_image = Image.new("RGB", (final_width, final_height), (255, 255, 255))
-  for x in range(len(final_array)):
-    for y in range(len(final_array[0])):
-      im = Image.open(PICTURE_DIR + "/" + final_array[x][y])
-      im = im.resize((NEW_MEDIA_WIDTH, NEW_MEDIA_HEIGHT))
 
-      coor = (x * NEW_MEDIA_WIDTH, y * NEW_MEDIA_HEIGHT)
+  print len(final_dict.keys())
+  for tile, coords_list in final_dict.iteritems():
+    im = Image.open(PICTURE_DIR + "/" + tile)
+    im = im.resize((NEW_MEDIA_WIDTH, NEW_MEDIA_HEIGHT))
+    for xy in coords_list:
+      final_image.paste(im, (xy[0] * NEW_MEDIA_WIDTH, xy[1] * NEW_MEDIA_HEIGHT))
+    print ".",
 
-      final_image.paste(im, coor)
   final_image.save("current.jpg")
   final_image.show()
 
@@ -124,6 +128,7 @@ def display_final_img(final_array):
 def pixelate_target():
   im = Image.open(TARGET_PIC)
   global TARGET_WIDTH, MEDIA_PERSPECTIVE, NEW_MEDIA_HEIGHT, NEW_MEDIA_WIDTH
+  global SCANNED_HEIGHT, SCANNED_WIDTH
 
   TARGET_WIDTH = im.width / X_DENSITY #a
   #targetHeight = im.height / SCALE_RATIO
@@ -138,7 +143,8 @@ def pixelate_target():
   im3 = im2.resize((im.width, im.height))
   print im2
 
-
+  SCANNED_WIDTH = im2.width
+  SCANNED_HEIGHT = im2.height
   targetData = [[0 for y in range(im2.height)] for x in range(im2.width)]
 
   #Starts tracking target color data from top left, 
@@ -179,15 +185,20 @@ def closest_pic(media_dict, target_tup):
 def find_matches(media_dict, target_array):
   final_name_array = [[0 for y in range(len(target_array[0]) / 2)]
                          for y in range(len(target_array) / 2)]
+  final_name_dict = {}
   for x in range(len(target_array))[::2]:
     for y in range(len(target_array[0]))[::2]:
       a = (target_array[x][y], target_array[x+1][y],
            target_array[x][y+1], target_array[x+1][y+1])
-      final_name_array[x / 2][y / 2] = closest_pic(media_dict, a)
+      tile_title = closest_pic(media_dict, a)
+      try:
+        final_name_dict[tile_title].append((x/2, y/2))
+      except Exception as e:
+        final_name_dict[tile_title] = [(x/2, y/2)]
     if x % (len(target_array) / 10) == 0: print ".",
     
-  print final_name_array
-  return final_name_array
+  print final_name_dict
+  return final_name_dict
 
 
   #print len(targetData[0])
