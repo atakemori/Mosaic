@@ -12,6 +12,7 @@ import sys
 import os
 import random
 
+import pickle
 import numpy
 import PIL
 from PIL import Image
@@ -23,9 +24,15 @@ TARGET_PIC = "./target.jpg"
 MEDIA_HEIGHT = -1
 MEDIA_WIDTH = -1
 
+TARGET_WIDTH = "a"
+MEDIA_PERSPECTIVE = "c"
+NEW_MEDIA_WIDTH = "d"
+NEW_MEDIA_HEIGHT = "b"
+
+
 X_DENSITY = 20
 
-SCALE_RATIO = 10
+SCALE = 20
 
 
 
@@ -57,50 +64,76 @@ class ColorDict(object):
   """
   def __init__(self):
     self.dict = {}
+    global MEDIA_HEIGHT, MEDIA_WIDTH
+
+    try:
+      self.dict = pickle.load(open("media_dict.p", "rb"))
+    except IOError as e:
+      pass
+
     print "Path Valid: " + str(os.path.isdir(PICTURE_DIR))
     #Count the number of files to do for progress bar as int totNum
     #  Also ends up counting directories as files...
     totNum = len(os.listdir(PICTURE_DIR))
-    global MEDIA_HEIGHT, MEDIA_WIDTH
-    #Iterate through files to build color data and add to dict
-    for filename in os.listdir(PICTURE_DIR):
-      im = Image.open(PICTURE_DIR + "/" + filename)
 
-      MEDIA_WIDTH = im.width
-      MEDIA_HEIGHT = im.height
+    im = Image.open(PICTURE_DIR + "/" + os.listdir(PICTURE_DIR)[0])
+    MEDIA_WIDTH = im.width
+    MEDIA_HEIGHT = im.height
+    im.close()
+
+    new_files = [x for x in os.listdir(PICTURE_DIR)
+                   if x not in self.dict.keys()]
+    #Iterate through files to build color data and add to dict
+    for filename in new_files:
+      im = Image.open(PICTURE_DIR + "/" + filename)
 
       #However it's done, it needs to end up with 4 colored quadrants
       im = im.resize((2, 2))
       self.dict[filename] = list(im.getdata())
 
+    if len(new_files) > 0:
+      pickle.dump(self.dict, open("media_dict.p", "wb"))
+      print "Media Dictionary Updated"
 
-      """
-      print filename
-      print im.getpixel((0,0)),
-      print im.getpixel((1,0))
-      print im.getpixel((0,1)),
-      print im.getpixel((1,1))
-      im.resize((40, 40)).show()
-      print self.dict[filename]
 
-      break
-      """
+
+def display_final_img(final_array):
+  #im = Image.open(PICTURE_DIR + "/" + ******)
+  global NEW_MEDIA_HEIGHT, NEW_MEDIA_WIDTH
+  NEW_MEDIA_WIDTH *= SCALE
+  NEW_MEDIA_HEIGHT *= SCALE
+
+  final_width = len(final_array) * NEW_MEDIA_WIDTH
+  final_height = len(final_array[0]) * NEW_MEDIA_HEIGHT
+
+  final_image = Image.new("RGB", (final_width, final_height), (255, 255, 255))
+  for x in range(len(final_array)):
+    for y in range(len(final_array[0])):
+      im = Image.open(PICTURE_DIR + "/" + final_array[x][y])
+      im = im.resize((NEW_MEDIA_WIDTH, NEW_MEDIA_HEIGHT))
+
+      coor = (x * NEW_MEDIA_WIDTH, y * NEW_MEDIA_HEIGHT)
+
+      final_image.paste(im, coor)
+  final_image.show()
 
 
 #Eventually do at sizes large enough where perspectives are
 ##easily divisible so perspectives stay relatively similar
 def pixelate_target():
   im = Image.open(TARGET_PIC)
-  targetWidth = im.width / X_DENSITY #a
+  global TARGET_WIDTH, MEDIA_PERSPECTIVE, NEW_MEDIA_HEIGHT, NEW_MEDIA_WIDTH
+
+  TARGET_WIDTH = im.width / X_DENSITY #a
   #targetHeight = im.height / SCALE_RATIO
   #targetPerspective = im.width / (im.height * 1.0)
-  mediaPerspective = (MEDIA_HEIGHT * 1.0) / MEDIA_WIDTH #c
+  MEDIA_PERSPECTIVE = (MEDIA_HEIGHT * 1.0) / MEDIA_WIDTH #c
 
-  newMediaWidth = targetWidth
-  newMediaHeight = int(newMediaWidth * mediaPerspective) #b
-  print newMediaWidth, newMediaHeight
+  NEW_MEDIA_WIDTH = TARGET_WIDTH
+  NEW_MEDIA_HEIGHT = int(NEW_MEDIA_WIDTH * MEDIA_PERSPECTIVE) #b
+  print NEW_MEDIA_WIDTH, NEW_MEDIA_HEIGHT
 
-  im2 = im.resize((2 * X_DENSITY, 2 * int(im.height / newMediaHeight)))
+  im2 = im.resize((2 * X_DENSITY, 2 * int(im.height / NEW_MEDIA_HEIGHT)))
   im3 = im2.resize((im.width, im.height))
   print im2
 
@@ -153,6 +186,7 @@ def find_matches(media_dict, target_array):
       print ".",
     print "."
   print final_name_array
+  return final_name_array
 
 
   #print len(targetData[0])
@@ -181,7 +215,9 @@ def main():
   #TODO: pixelate_target should be passed the target location instead of assuming
   target_array = pixelate_target()
 
-  find_matches(color_dict.dict, target_array)
+  final_array = find_matches(color_dict.dict, target_array)
+
+  display_final_img(final_array)
 
 
 
