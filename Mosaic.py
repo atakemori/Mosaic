@@ -33,9 +33,9 @@ SCANNED_WIDTH = -1
 SCANNED_HEIGHT = -1
 
 
-X_DENSITY = 20
+X_DENSITY = 50
 
-SCALE = 2
+SCALE = 1
 
 
 
@@ -111,7 +111,8 @@ def display_final_img(final_dict):
 
   final_image = Image.new("RGB", (final_width, final_height), (255, 255, 255))
 
-  print len(final_dict.keys())
+  print "Number of unigue cells: " + str(len(final_dict.keys()))
+  print "Assembling Final Picture:"
   for tile, coords_list in final_dict.iteritems():
     im = Image.open(PICTURE_DIR + "/" + tile)
     im = im.resize((NEW_MEDIA_WIDTH, NEW_MEDIA_HEIGHT))
@@ -186,6 +187,7 @@ def find_matches(media_dict, target_array):
   final_name_array = [[0 for y in range(len(target_array[0]) / 2)]
                          for y in range(len(target_array) / 2)]
   final_name_dict = {}
+  print "Analyzing Matches:",
   for x in range(len(target_array))[::2]:
     for y in range(len(target_array[0]))[::2]:
       a = (target_array[x][y], target_array[x+1][y],
@@ -196,8 +198,9 @@ def find_matches(media_dict, target_array):
       except Exception as e:
         final_name_dict[tile_title] = [(x/2, y/2)]
     if x % (len(target_array) / 10) == 0: print ".",
-    
-  print final_name_dict
+  
+  print "\n"
+  #print final_name_dict
   return final_name_dict
 
 
