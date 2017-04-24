@@ -33,9 +33,9 @@ SCANNED_WIDTH = -1
 SCANNED_HEIGHT = -1
 
 
-X_DENSITY = 50
+X_DENSITY = 150
 
-SCALE = 1
+SCALE = 15 # double x_density is full-scale?
 
 
 
@@ -72,7 +72,8 @@ class ColorDict(object):
     try:
       self.dict = pickle.load(open("media_dict.p", "rb"))
     except IOError as e:
-      pass
+      print "Building new media database"
+      print "New Images:",
 
     print "Path Valid: " + str(os.path.isdir(PICTURE_DIR))
     #Count the number of files to do for progress bar as int totNum
@@ -89,9 +90,9 @@ class ColorDict(object):
     #Iterate through files to build color data and add to dict
     for filename in new_files:
       im = Image.open(PICTURE_DIR + "/" + filename)
-
+      print "+",
       #However it's done, it needs to end up with 4 colored quadrants
-      im = im.resize((2, 2))
+      im = im.resize((2, 2), Image.LANCZOS)
       self.dict[filename] = list(im.getdata())
 
     if len(new_files) > 0:
@@ -106,13 +107,17 @@ def display_final_img(final_dict):
   NEW_MEDIA_WIDTH *= SCALE
   NEW_MEDIA_HEIGHT *= SCALE
 
-  final_width = SCANNED_WIDTH * NEW_MEDIA_WIDTH / 2
-  final_height = SCANNED_HEIGHT * NEW_MEDIA_HEIGHT / 2
+  print "Old:", MEDIA_WIDTH ,MEDIA_HEIGHT
+  print "New:", NEW_MEDIA_WIDTH, NEW_MEDIA_HEIGHT
+
+  final_width = (SCANNED_WIDTH * NEW_MEDIA_WIDTH) / 2
+  final_height = (SCANNED_HEIGHT * NEW_MEDIA_HEIGHT) / 2
 
   final_image = Image.new("RGB", (final_width, final_height), (255, 255, 255))
 
   print "Number of unigue cells: " + str(len(final_dict.keys()))
   print "Assembling Final Picture:"
+
   for tile, coords_list in final_dict.iteritems():
     im = Image.open(PICTURE_DIR + "/" + tile)
     im = im.resize((NEW_MEDIA_WIDTH, NEW_MEDIA_HEIGHT))
@@ -140,8 +145,7 @@ def pixelate_target():
   NEW_MEDIA_HEIGHT = int(NEW_MEDIA_WIDTH * MEDIA_PERSPECTIVE) #b
   print NEW_MEDIA_WIDTH, NEW_MEDIA_HEIGHT
 
-  im2 = im.resize((2 * X_DENSITY, 2 * int(im.height / NEW_MEDIA_HEIGHT)))
-  im3 = im2.resize((im.width, im.height))
+  im2 = im.resize((2 * X_DENSITY, 2 * int(im.height / NEW_MEDIA_HEIGHT)), Image.LANCZOS)
   print im2
 
   SCANNED_WIDTH = im2.width
@@ -171,13 +175,20 @@ def closest_pic(media_dict, target_tup):
       a = list(map(lambda x: x * x, a))
       a = reduce(lambda x, y: x + y, a)
       new_value += a
-    #print new_value
-    new_dict[new_value] = pair[0]
-  #new_dict.values().sort()[0]
-  #print new_dict.items()
-  #b = list(sorted(new_dict.items()))
-  #print list(sorted(new_dict.items()))[0][1]
+    new_dict[new_value] = pair[0] #what does this do
+
+
   return list(sorted(new_dict.items()))[0][1]
+
+  """
+  num = random.random()
+  if num < .7:
+    return list(sorted(new_dict.items()))[0][1]
+  elif num < .9:
+    return list(sorted(new_dict.items()))[1][1]
+  else:
+    return list(sorted(new_dict.items()))[2][1]
+  """
   #print b[0], b[-1]
 
 
