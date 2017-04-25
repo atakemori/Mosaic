@@ -33,7 +33,7 @@ SCANNED_WIDTH = -1
 SCANNED_HEIGHT = -1
 
 
-X_DENSITY = 100
+X_DENSITY = 50
 
 SCALE = 10 # double x_density is full-scale?
 
@@ -93,7 +93,8 @@ class ColorDict(object):
       print "+",
       #However it's done, it needs to end up with 4 colored quadrants
       im = im.resize((2, 2), Image.LANCZOS)
-      self.dict[filename] = list(im.getdata())
+      im2 = im.resize((1, 1), Image.LANCZOS)
+      self.dict[filename] = (list(im.getdata()), im2.getpixel((0, 0)))
 
     if len(new_files) > 0:
       pickle.dump(self.dict, open("media_dict.p", "wb"))
@@ -167,15 +168,15 @@ def media_key():
 #or maybe not pass the media_dict
 def closest_pic(media_dict, target_tup):
   new_dict = {}
-  for pair in media_dict.items():
+  for key, value in media_dict.items():
     new_value = 0
     for i in range(len(target_tup)):
-      #print target_tup, pair[1]
-      a = list(numpy.subtract(target_tup[i], pair[1][i]))
+      #print target_tup, value
+      a = list(numpy.subtract(target_tup[i], value[0][i]))
       a = list(map(lambda x: x * x, a))
       a = reduce(lambda x, y: x + y, a)
       new_value += a
-    new_dict[new_value] = pair[0] #what does this do
+    new_dict[new_value] = key #what does this do
 
 
   return list(sorted(new_dict.items()))[0][1]

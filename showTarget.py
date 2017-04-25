@@ -100,12 +100,22 @@ def pixelate_target():
   im4 = im.resize((2 * X_DENSITY, 2 * int(im.height / NEW_MEDIA_HEIGHT)), 1)
   im5 = im4.resize((im.width, im.height))
 
-  print im2
-  print "Original perspective:", im.width, im.height, im.width / (im.height * 1.0)
-  print "Shrunken perspective:", im2.width, im2.height, im2.width / (im2.height * 1.0)
+  im6 = im.resize((2, 2), Image.LANCZOS)
+  im7 = im6.resize((1, 1))
+  im8 = im6.resize((1, 1), Image.LANCZOS)
+  im9 = im.resize((1, 1), Image.LANCZOS)
 
-  im3.show()
-  im5.show()
+  print list(im7.getdata())
+  print im8.getpixel((0, 0))
+  print list(im9.getdata())
+
+
+  #print im2
+  #print "Original perspective:", im.width, im.height, im.width / (im.height * 1.0)
+  #print "Shrunken perspective:", im2.width, im2.height, im2.width / (im2.height * 1.0)
+
+  #im3.show()
+  #im5.show()
 
   SCANNED_WIDTH = im2.width
   SCANNED_HEIGHT = im2.height
