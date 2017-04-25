@@ -33,9 +33,9 @@ SCANNED_WIDTH = -1
 SCANNED_HEIGHT = -1
 
 
-X_DENSITY = 150
+X_DENSITY = 100
 
-SCALE = 15 # double x_density is full-scale?
+SCALE = 10 # double x_density is full-scale?
 
 
 
