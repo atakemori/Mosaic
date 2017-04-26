@@ -4,3 +4,4 @@ results
 *.[pP][nN][gG]
 media_dict.p
 *.p
+*.pyc

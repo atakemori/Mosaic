@@ -16,10 +16,13 @@ import pickle
 import numpy
 import PIL
 from PIL import Image
+from collections import namedtuple
+
+import kdTree
 
 
 
-PICTURE_DIR = "./media"
+PICTURE_DIR = "./media2"
 TARGET_PIC = "./target.jpg"
 MEDIA_HEIGHT = -1
 MEDIA_WIDTH = -1
@@ -66,18 +69,20 @@ class ColorDict(object):
   "and names of the pictures in the PIC_DIR folder.
   """
   def __init__(self):
-    self.dict = {}
+    self.kd_list = []
+    self.kd_tree = None
     global MEDIA_HEIGHT, MEDIA_WIDTH
 
     try:
-      self.dict = pickle.load(open("media_dict.p", "rb"))
+      self.kd_tree = pickle.load(open("kd_tree.p", "rb"))
+      self.kd_list = pickle.load(open("kd_list.p", "rb")) #might take too long
     except IOError as e:
       print "Building new media database"
       print "New Images:",
 
     print "Path Valid: " + str(os.path.isdir(PICTURE_DIR))
     #Count the number of files to do for progress bar as int totNum
-    #  Also ends up counting directories as files...
+    ##Also ends up counting directories as files...
     totNum = len(os.listdir(PICTURE_DIR))
 
     im = Image.open(PICTURE_DIR + "/" + os.listdir(PICTURE_DIR)[0])
@@ -85,19 +90,26 @@ class ColorDict(object):
     MEDIA_HEIGHT = im.height
     im.close()
 
+    Cell = namedtuple('Cell', ['name', 'pix4', 'pix1'])
+
     new_files = [x for x in os.listdir(PICTURE_DIR)
-                   if x not in self.dict.keys()]
+                   if x not in [cell.name for cell in self.kd_list]]
     #Iterate through files to build color data and add to dict
     for filename in new_files:
       im = Image.open(PICTURE_DIR + "/" + filename)
-      print "+",
       #However it's done, it needs to end up with 4 colored quadrants
       im = im.resize((2, 2), Image.LANCZOS)
       im2 = im.resize((1, 1), Image.LANCZOS)
-      self.dict[filename] = (list(im.getdata()), im2.getpixel((0, 0)))
+      #self.dict[filename] = list(im.getdata())
+      #self.kd_list.extend(filename)
+      self.kd_list.append(Cell(filename, list(im.getdata()), im2.getpixel((0,0))))
+      print "+",
+    print self.kd_list
 
     if len(new_files) > 0:
-      pickle.dump(self.dict, open("media_dict.p", "wb"))
+      self.kd_tree = kdTree.kdtree(self.kd_list)
+      pickle.dump(self.kd_tree, open("kd_tree.p", "wb"))
+      pickle.dump(self.kd_list, open("kd_list.p", "wb"))
       print "Media Dictionary Updated"
 
 
