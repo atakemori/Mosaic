@@ -41,7 +41,7 @@ X_DENSITY = 50
 SCALE = 10 # double x_density is full-scale?
 
 
-
+Cell = namedtuple('Cell', ['name', 'pix4', 'pix1'])
 
 
 class ImageBox(object):
@@ -90,7 +90,6 @@ class ColorDict(object):
     MEDIA_HEIGHT = im.height
     im.close()
 
-    Cell = namedtuple('Cell', ['name', 'pix4', 'pix1'])
 
     new_files = [x for x in os.listdir(PICTURE_DIR)
                    if x not in [cell.name for cell in self.kd_list]]
@@ -111,6 +110,8 @@ class ColorDict(object):
       pickle.dump(self.kd_tree, open("kd_tree.p", "wb"))
       pickle.dump(self.kd_list, open("kd_list.p", "wb"))
       print "Media Dictionary Updated"
+
+    print self.kd_tree
 
 
 #TODO if final img large, split into quads with another for loop
