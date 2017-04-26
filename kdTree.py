@@ -14,10 +14,13 @@ from collections import namedtuple
 from operator import itemgetter
 from pprint import pformat
 from operator import attrgetter
+import numpy
 
 class Node(namedtuple('Node', 'location data filename left_child right_child')):
     def __repr__(self):
         return pformat(tuple(self))
+    closest_node = None
+    closest_distance_sq = None
 
 def pix1key(cell):
     print cell.pix1
@@ -47,3 +50,32 @@ def kdtree(point_list, depth=0):
         left_child=kdtree(point_list[:median], depth + 1),
         right_child=kdtree(point_list[median + 1:], depth + 1)
     )
+
+def find_closest_h(node, rgb_coord, depth = 0):
+    #If a leaf is reached
+    if not node.left_child && not node.right_child:
+        #Calculate distance from leaf
+        dist = list(numpy.subtract(node.location, rgb_coord))
+        dist = list(map(lambda x: x * x, dist))
+        dist = reduce(lambda x, y: x + y, dist)
+        #i'm so confused
+        if Node.closest_node && (a > Node.closest_distance_sq):
+            return
+        else:
+            Node.closest_distance_sq = dist
+            Node.closest_node = node
+            return
+    #Travel down *favors the right side. perhaps search down both if
+    ##the values are equal
+    axis = depth % 3
+    if Node.closest_node.location[axis] <= rgb_coord[axis]:
+        
+
+
+
+def find_closest(root_node, rgb_coord):
+    Node.closest_node = None
+    Node.closest_distance_sq = None
+    return find_closest_h(root_node, rgb_coord)
+
+    

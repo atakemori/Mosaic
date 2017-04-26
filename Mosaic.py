@@ -173,13 +173,10 @@ def pixelate_target():
       targetData[x][y] = im2.getpixel((x, y))
   return targetData
 
-
-def media_key():
-  pass
 #Prime for optimizing later ESPECIALLY SINCE I DONT THINK I NEED TO USE
 ##ALL THESE DICTS
-#or maybe not pass the media_dict
-def closest_pic(media_dict, target_tup):
+#or maybe not pass the media_dict/TREEEEEEEE
+def closest_pic(media_tree, target_tup):
   new_dict = {}
   for key, value in media_dict.items():
     new_value = 0
@@ -191,24 +188,11 @@ def closest_pic(media_dict, target_tup):
       new_value += a
     new_dict[new_value] = key #what does this do
 
-
   return list(sorted(new_dict.items()))[0][1]
-
-  """
-  num = random.random()
-  if num < .7:
-    return list(sorted(new_dict.items()))[0][1]
-  elif num < .9:
-    return list(sorted(new_dict.items()))[1][1]
-  else:
-    return list(sorted(new_dict.items()))[2][1]
-  """
-  #print b[0], b[-1]
-
 
 
 #   media_dict.get(num, data[min(data.keys(), key=lambda k: abs(k-num))])
-def find_matches(media_dict, target_array):
+def find_matches(media_tree, target_array):
   final_name_array = [[0 for y in range(len(target_array[0]) / 2)]
                          for y in range(len(target_array) / 2)]
   final_name_dict = {}
@@ -217,7 +201,7 @@ def find_matches(media_dict, target_array):
     for y in range(len(target_array[0]))[::2]:
       a = (target_array[x][y], target_array[x+1][y],
            target_array[x][y+1], target_array[x+1][y+1])
-      tile_title = closest_pic(media_dict, a)
+      tile_title = closest_pic(media_tree, a)
       try:
         final_name_dict[tile_title].append((x/2, y/2))
       except Exception as e:
@@ -255,7 +239,7 @@ def main():
   #TODO: pixelate_target should be passed the target location instead of assuming
   target_array = pixelate_target()
 
-  final_array = find_matches(color_dict.dict, target_array)
+  final_array = find_matches(color_dict.kd_tree, target_array)
 
   display_final_img(final_array)
 
