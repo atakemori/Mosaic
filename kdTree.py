@@ -67,9 +67,14 @@ def find_closest_h(node, rgb_coord, depth = 0):
             return
     #Travel down *favors the right side. perhaps search down both if
     ##the values are equal
-    axis = depth % 3
-    if Node.closest_node.location[axis] <= rgb_coord[axis]:
-        
+    elif node.left_child && node.right_child:
+        axis = depth % 3
+        if Node.closest_node.location[axis] < rgb_coord[axis]:
+            return find_closest_h(node.left_child, rgb_coord, depth + 1)
+        else:
+            return find_closest_h(node.right_child, rgb_coord, depth + 1)
+    elif:
+
 
 
 
