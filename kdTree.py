@@ -56,20 +56,20 @@ def calc_distance(node, rgb_coord):
   dist = list(map(lambda x: x * x, dist))
   dist = reduce(lambda x, y: x + y, dist)
 
-  if a <= Node.closest_distance_sq:
+  if dist <= Node.closest_distance_sq:
     Node.closest_distance_sq = dist
     Node.closest_node = node
 
 
 def find_closest_h(node, rgb_coord, depth = 0):
   #If a leaf is reached
-  if not node.left_child && not node.right_child:
+  if not node.left_child and not node.right_child:
     #Calculate distance from leaf
     dist = list(numpy.subtract(node.location, rgb_coord))
     dist = list(map(lambda x: x * x, dist))
     dist = reduce(lambda x, y: x + y, dist)
     #i'm so confused
-    if Node.closest_node && (a > Node.closest_distance_sq):
+    if Node.closest_node and (a > Node.closest_distance_sq):
       return
     else:
       Node.closest_distance_sq = dist
@@ -77,9 +77,9 @@ def find_closest_h(node, rgb_coord, depth = 0):
       return
   #Travel down *favors the right side. perhaps search down both if
   ##the values are equal
-  elif node.left_child && node.right_child:
+  elif node.left_child and node.right_child:
     axis = depth % 3
-    if Node.closest_node.location[axis] < rgb_coord[axikills]:
+    if node.location[axis] < rgb_coord[axis]:
       find_closest_h(node.left_child, rgb_coord, depth + 1)
       calc_distance(node, rgb_coord)
       #if Node.closest_distance_sq > 
@@ -104,9 +104,9 @@ def find_closest_h(node, rgb_coord, depth = 0):
 
 
 
-def find_closest(root_node, rgb_coord):
+def find_closest(root_node, rgb_coord, n = 0):
   Node.closest_node = None
   Node.closest_distance_sq = None
   find_closest_h(root_node, rgb_coord)
-  return Node.closest_node
+  return [Node.closest_node]
   

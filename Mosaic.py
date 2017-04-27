@@ -22,7 +22,7 @@ import kdTree
 
 
 
-PICTURE_DIR = "./media2"
+PICTURE_DIR = "./media"
 TARGET_PIC = "./target.jpg"
 MEDIA_HEIGHT = -1
 MEDIA_WIDTH = -1
@@ -36,9 +36,9 @@ SCANNED_WIDTH = -1
 SCANNED_HEIGHT = -1
 
 
-X_DENSITY = 50
+X_DENSITY = 200
 
-SCALE = 10 # double x_density is full-scale?
+SCALE = 1 # double x_density is full-scale?
 
 
 Cell = namedtuple('Cell', ['name', 'pix4', 'pix1'])
@@ -160,23 +160,45 @@ def pixelate_target():
   print NEW_MEDIA_WIDTH, NEW_MEDIA_HEIGHT
 
   im2 = im.resize((2 * X_DENSITY, 2 * int(im.height / NEW_MEDIA_HEIGHT)), Image.LANCZOS)
+  im3 = im2.resize((X_DENSITY, int(im.height / NEW_MEDIA_HEIGHT)), Image.LANCZOS)
   print im2
 
   SCANNED_WIDTH = im2.width
   SCANNED_HEIGHT = im2.height
   targetData = [[0 for y in range(im2.height)] for x in range(im2.width)]
+  targetData_small = [[0 for y in range(im3.height)] for x in range(im3.width)]
 
   #Starts tracking target color data from top left, 
   #  travels down the y, and the across x
   for x in range(im2.width):
     for y in range(im2.height):
       targetData[x][y] = im2.getpixel((x, y))
-  return targetData
+
+  for x in range(im3.width):
+    for y in range(im3.height):
+      targetData_small[x][y] = im3.getpixel((x, y))
+
+  target_values = namedtuple('TargetVal', ['big', 'small'])
+  return target_values(targetData, targetData_small)
 
 #Prime for optimizing later ESPECIALLY SINCE I DONT THINK I NEED TO USE
 ##ALL THESE DICTS
 #or maybe not pass the media_dict/TREEEEEEEE
-def closest_pic(media_tree, target_tup):
+def closest_pic(node_list, target_tup):
+  new_dict = {}
+  for node in node_list:
+    new_value = 0
+    for i in range(len(target_tup)):
+      #print target_tup, value
+      a = list(numpy.subtract(target_tup[i], node.data[i]))
+      a = list(map(lambda x: x * x, a))
+      a = reduce(lambda x, y: x + y, a)
+      new_value += a
+    new_dict[new_value] = node #what does this do
+
+  return list(sorted(new_dict.items()))[0][1].filename
+
+def closest_pic_orig(node_list, target_tup):
   new_dict = {}
   for key, value in media_dict.items():
     new_value = 0
@@ -192,7 +214,7 @@ def closest_pic(media_tree, target_tup):
 
 
 #   media_dict.get(num, data[min(data.keys(), key=lambda k: abs(k-num))])
-def find_matches(media_tree, target_array):
+def find_matches(media_tree, target_array, target_array_small):
   final_name_array = [[0 for y in range(len(target_array[0]) / 2)]
                          for y in range(len(target_array) / 2)]
   final_name_dict = {}
@@ -201,7 +223,11 @@ def find_matches(media_tree, target_array):
     for y in range(len(target_array[0]))[::2]:
       a = (target_array[x][y], target_array[x+1][y],
            target_array[x][y+1], target_array[x+1][y+1])
-      tile_title = closest_pic(media_tree, a)
+      b = target_array_small[x/2][y/2]
+      #Gets closest node based on single pixel
+      closest_nodes = kdTree.find_closest(media_tree, b)
+      #Gets name after running closest nodes through old comparer 
+      tile_title = closest_pic(closest_nodes, a)
       try:
         final_name_dict[tile_title].append((x/2, y/2))
       except Exception as e:
@@ -237,9 +263,9 @@ def main():
   color_dict = ColorDict()
 
   #TODO: pixelate_target should be passed the target location instead of assuming
-  target_array = pixelate_target()
+  targets_ntup = pixelate_target()
 
-  final_array = find_matches(color_dict.kd_tree, target_array)
+  final_array = find_matches(color_dict.kd_tree, targets_ntup.big, targets_ntup.small)
 
   display_final_img(final_array)
 
