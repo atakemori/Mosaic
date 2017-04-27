@@ -16,7 +16,7 @@ from pprint import pformat
 from operator import attrgetter
 import numpy
 
-class Node(namedtuple('Node', 'location data filename left_child right_child')):
+class Node(namedtuple('Node', 'location data filename left_child right_child parent_loc')):
   def __repr__(self):
     return pformat(tuple(self))
   closest_node = None
@@ -26,7 +26,7 @@ def pix1key(cell):
   print cell.pix1
   return cell.pix1[axis]
 
-def kdtree(point_list, depth=0):
+def kdtree(point_list, depth=0, parent = (0,0,0)):
   #try:
   #    k = len(point_list[0]) # assumes all points have the same dimension
   #except IndexError as e: # if not point_list:
@@ -47,8 +47,9 @@ def kdtree(point_list, depth=0):
     location=point_list[median].pix1,
     data=point_list[median].pix4,
     filename=point_list[median].name,
-    left_child=kdtree(point_list[:median], depth + 1),
-    right_child=kdtree(point_list[median + 1:], depth + 1)
+    left_child=kdtree(point_list[:median], depth + 1, point_list[median].pix1),
+    right_child=kdtree(point_list[median + 1:], depth + 1, point_list[median].pix1),
+    parent_loc=parent
   )
 
 def calc_distance(node, rgb_coord):
@@ -69,7 +70,7 @@ def find_closest_h(node, rgb_coord, depth = 0):
     dist = list(map(lambda x: x * x, dist))
     dist = reduce(lambda x, y: x + y, dist)
     #i'm so confused
-    if Node.closest_node and (a > Node.closest_distance_sq):
+    if Node.closest_node and (dist > Node.closest_distance_sq):
       return
     else:
       Node.closest_distance_sq = dist
@@ -80,14 +81,21 @@ def find_closest_h(node, rgb_coord, depth = 0):
   elif node.left_child and node.right_child:
     axis = depth % 3
     if node.location[axis] < rgb_coord[axis]:
+      #go down the left branch
       find_closest_h(node.left_child, rgb_coord, depth + 1)
       calc_distance(node, rgb_coord)
-      #if Node.closest_distance_sq > 
-      #implement hypersphere/hyperplane crossing condition
+      #check hyperplane
+      if Node.closest_distance_sq > (node.location[axis] - node.parent_loc[axis])**2:
+        #do other branch too
+        find_closest_h(node.left_child, rgb_coord, depth + 1)
       return
     else:
       find_closest_h(node.right_child, rgb_coord, depth + 1)
       calc_distance(node, rgb_coord)
+      #check hyperplane
+      if Node.closest_distance_sq > (node.location[axis] - node.parent_loc[axis])**2:
+        #do other branch too
+        find_closest_h(node.right_child, rgb_coord, depth + 1)
       return
   elif node.left_child:
     find_closest_h(node.left_child, rgb_coord, depth + 1)

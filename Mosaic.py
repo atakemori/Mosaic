@@ -103,7 +103,7 @@ class ColorDict(object):
       #self.kd_list.extend(filename)
       self.kd_list.append(Cell(filename, list(im.getdata()), im2.getpixel((0,0))))
       print "+",
-    print self.kd_list
+    #print self.kd_list
 
     if len(new_files) > 0:
       self.kd_tree = kdTree.kdtree(self.kd_list)
@@ -111,7 +111,7 @@ class ColorDict(object):
       pickle.dump(self.kd_list, open("kd_list.p", "wb"))
       print "Media Dictionary Updated"
 
-    print self.kd_tree
+    #print self.kd_tree
 
 
 #TODO if final img large, split into quads with another for loop
@@ -178,6 +178,9 @@ def pixelate_target():
     for y in range(im3.height):
       targetData_small[x][y] = im3.getpixel((x, y))
 
+  print "Number of Cells: ", len(targetData), "x", len(targetData[0])
+  print "Total Number:", len(targetData) * len(targetData[0])
+
   target_values = namedtuple('TargetVal', ['big', 'small'])
   return target_values(targetData, targetData_small)
 
@@ -235,7 +238,7 @@ def find_matches(media_tree, target_array, target_array_small):
     if x % (len(target_array) / 10) == 0: print ".",
   
   print "\n"
-  #print final_name_dict
+  print final_name_dict.keys()
   return final_name_dict
 
 
