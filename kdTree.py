@@ -51,6 +51,16 @@ def kdtree(point_list, depth=0):
     right_child=kdtree(point_list[median + 1:], depth + 1)
   )
 
+def calc_distance(node, rgb_coord):
+  dist = list(numpy.subtract(node.location, rgb_coord))
+  dist = list(map(lambda x: x * x, dist))
+  dist = reduce(lambda x, y: x + y, dist)
+
+  if a <= Node.closest_distance_sq:
+    Node.closest_distance_sq = dist
+    Node.closest_node = node
+
+
 def find_closest_h(node, rgb_coord, depth = 0):
   #If a leaf is reached
   if not node.left_child && not node.right_child:
@@ -69,13 +79,26 @@ def find_closest_h(node, rgb_coord, depth = 0):
   ##the values are equal
   elif node.left_child && node.right_child:
     axis = depth % 3
-    if Node.closest_node.location[axis] < rgb_coord[axis]:
-      distance
-      return find_closest_h(node.left_child, rgb_coord, depth + 1)
+    if Node.closest_node.location[axis] < rgb_coord[axikills]:
+      find_closest_h(node.left_child, rgb_coord, depth + 1)
+      calc_distance(node, rgb_coord)
+      #if Node.closest_distance_sq > 
+      #implement hypersphere/hyperplane crossing condition
+      return
     else:
-      distance
-      return find_closest_h(node.right_child, rgb_coord, depth + 1)
-  elif:
+      find_closest_h(node.right_child, rgb_coord, depth + 1)
+      calc_distance(node, rgb_coord)
+      return
+  elif node.left_child:
+    find_closest_h(node.left_child, rgb_coord, depth + 1)
+    calc_distance(node, rgb_coord)
+    return
+  elif node.right_child:      
+    find_closest_h(node.right_child, rgb_coord, depth + 1)
+    calc_distance(node, rgb_coord)
+    return
+  else:
+    raise NameError('Something wrong in find_closest')
 
 
 
@@ -84,6 +107,6 @@ def find_closest_h(node, rgb_coord, depth = 0):
 def find_closest(root_node, rgb_coord):
   Node.closest_node = None
   Node.closest_distance_sq = None
-  return find_closest_h(root_node, rgb_coord)
-
+  find_closest_h(root_node, rgb_coord)
+  return Node.closest_node
   
