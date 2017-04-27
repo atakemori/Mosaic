@@ -17,6 +17,7 @@ import numpy
 import PIL
 from PIL import Image
 from collections import namedtuple
+import time
 
 import kdTree
 
@@ -36,9 +37,11 @@ SCANNED_WIDTH = -1
 SCANNED_HEIGHT = -1
 
 
-X_DENSITY = 200
+X_DENSITY = 150
 
-SCALE = 1 # double x_density is full-scale?
+SCALE = 15 # double x_density is full-scale?
+
+K_NN = 40
 
 
 Cell = namedtuple('Cell', ['name', 'pix4', 'pix1'])
@@ -228,7 +231,7 @@ def find_matches(media_tree, target_array, target_array_small):
            target_array[x][y+1], target_array[x+1][y+1])
       b = target_array_small[x/2][y/2]
       #Gets closest node based on single pixel
-      closest_nodes = kdTree.find_closest(media_tree, b)
+      closest_nodes = kdTree.find_closest(media_tree, b, K_NN)
       #Gets name after running closest nodes through old comparer 
       tile_title = closest_pic(closest_nodes, a)
       try:
@@ -256,6 +259,7 @@ def find_matches(media_tree, target_array, target_array_small):
 
 
 def main():
+  start_time = time.time()
   sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
   options = sys.argv
   if len(options) > 2:
@@ -272,7 +276,7 @@ def main():
 
   display_final_img(final_array)
 
-
+  print("--- %s seconds ---" % (time.time() - start_time))
 
 if __name__ == '__main__':
   main()

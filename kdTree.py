@@ -11,6 +11,7 @@ K-d_tree implementation
 """
 
 from collections import namedtuple
+from collections import deque
 from operator import itemgetter
 from pprint import pformat
 from operator import attrgetter
@@ -21,6 +22,7 @@ class Node(namedtuple('Node', 'location data filename left_child right_child par
     return pformat(tuple(self))
   closest_node = None
   closest_distance_sq = None
+  deque = None
 
 def pix1key(cell):
   print cell.pix1
@@ -62,6 +64,7 @@ def calc_distance(node, rgb_coord):
   if dist <= Node.closest_distance_sq:
     Node.closest_distance_sq = dist
     Node.closest_node = node
+    Node.deque.append(node)
 
 
 def find_closest_h(node, rgb_coord, depth = 0):
@@ -99,6 +102,7 @@ def find_closest_h(node, rgb_coord, depth = 0):
     else:
       Node.closest_distance_sq = dist
       Node.closest_node = node
+      Node.deque.append(node)
       return
   elif node.left_child:
     find_closest_h(node.left_child, rgb_coord, depth + 1)
@@ -118,8 +122,9 @@ def find_closest_h(node, rgb_coord, depth = 0):
 def find_closest(root_node, rgb_coord, n = 0):
   Node.closest_node = None
   Node.closest_distance_sq = None
+  Node.deque = deque(maxlen=n)
   find_closest_h(root_node, rgb_coord)
   #print "+++++++++++++++++++++"
   #print Node.closest_node.location, rgb_coord, Node.closest_distance_sq
-  return [Node.closest_node]
+  return Node.deque
   
