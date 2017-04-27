@@ -53,41 +53,30 @@ def kdtree(point_list, depth=0, parent = (0,0,0)):
   )
 
 def calc_distance(node, rgb_coord):
+  #print node.location, rgb_coord, ":",
   dist = list(numpy.subtract(node.location, rgb_coord))
   dist = list(map(lambda x: x * x, dist))
-  dist = reduce(lambda x, y: x + y, dist)
-
+  #dist = reduce(lambda x, y: x + y, dist)
+  dist = dist[0] + dist[1] + dist[2]
+  #print dist
   if dist <= Node.closest_distance_sq:
     Node.closest_distance_sq = dist
     Node.closest_node = node
 
 
 def find_closest_h(node, rgb_coord, depth = 0):
-  #If a leaf is reached
-  if not node.left_child and not node.right_child:
-    #Calculate distance from leaf
-    dist = list(numpy.subtract(node.location, rgb_coord))
-    dist = list(map(lambda x: x * x, dist))
-    dist = reduce(lambda x, y: x + y, dist)
-    #i'm so confused
-    if Node.closest_node and (dist > Node.closest_distance_sq):
-      return
-    else:
-      Node.closest_distance_sq = dist
-      Node.closest_node = node
-      return
   #Travel down *favors the right side. perhaps search down both if
   ##the values are equal
-  elif node.left_child and node.right_child:
+  if node.left_child and node.right_child:
     axis = depth % 3
-    if node.location[axis] < rgb_coord[axis]:
+    if rgb_coord[axis] < node.location[axis]:
       #go down the left branch
       find_closest_h(node.left_child, rgb_coord, depth + 1)
       calc_distance(node, rgb_coord)
       #check hyperplane
-      if Node.closest_distance_sq > (node.location[axis] - node.parent_loc[axis])**2:
+      if Node.closest_node.location > (node.location[axis] - node.parent_loc[axis])**2:
         #do other branch too
-        find_closest_h(node.left_child, rgb_coord, depth + 1)
+        find_closest_h(node.right_child, rgb_coord, depth + 1)
       return
     else:
       find_closest_h(node.right_child, rgb_coord, depth + 1)
@@ -95,7 +84,21 @@ def find_closest_h(node, rgb_coord, depth = 0):
       #check hyperplane
       if Node.closest_distance_sq > (node.location[axis] - node.parent_loc[axis])**2:
         #do other branch too
-        find_closest_h(node.right_child, rgb_coord, depth + 1)
+        find_closest_h(node.left_child, rgb_coord, depth + 1)
+      return
+  #If a leaf is reached
+  elif not node.left_child and not node.right_child:
+    #Calculate distance from leaf
+    dist = list(numpy.subtract(node.location, rgb_coord))
+    dist = list(map(lambda x: x * x, dist))
+    #dist = reduce(lambda x, y: x + y, dist)
+    dist = dist[0] + dist[1] + dist[2]
+    #i'm so confused
+    if Node.closest_node and (dist > Node.closest_distance_sq):
+      return
+    else:
+      Node.closest_distance_sq = dist
+      Node.closest_node = node
       return
   elif node.left_child:
     find_closest_h(node.left_child, rgb_coord, depth + 1)
@@ -116,5 +119,7 @@ def find_closest(root_node, rgb_coord, n = 0):
   Node.closest_node = None
   Node.closest_distance_sq = None
   find_closest_h(root_node, rgb_coord)
+  #print "+++++++++++++++++++++"
+  #print Node.closest_node.location, rgb_coord, Node.closest_distance_sq
   return [Node.closest_node]
   
