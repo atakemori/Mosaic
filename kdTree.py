@@ -126,5 +126,6 @@ def find_closest(root_node, rgb_coord, n = 0):
   find_closest_h(root_node, rgb_coord)
   #print "+++++++++++++++++++++"
   #print Node.closest_node.location, rgb_coord, Node.closest_distance_sq
+  print len(Node.deque),
   return Node.deque
   

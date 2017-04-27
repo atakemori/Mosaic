@@ -37,11 +37,11 @@ SCANNED_WIDTH = -1
 SCANNED_HEIGHT = -1
 
 
-X_DENSITY = 150
+X_DENSITY =50
 
-SCALE = 15 # double x_density is full-scale?
+SCALE = 10 # double x_density is full-scale?
 
-K_NN = 40
+K_NN = 5
 
 
 Cell = namedtuple('Cell', ['name', 'pix4', 'pix1'])
