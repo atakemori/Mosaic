@@ -14,11 +14,11 @@ import random
 
 import pickle
 import numpy
-import PIL
-from PIL import Image
+from PIL import ImageTk
+from PIL import Image as PillowImage
 from collections import namedtuple
 import time
-#from Tkinter import *
+from Tkinter import *
 
 import kdTree
 
@@ -46,7 +46,10 @@ K_NN = 10
 
 CLOSENESS = 5000
 
-final_image_name = 'Density{0} Scale{1} Knn{2} Closeness{3} interactive.jpg'.format(X_DENSITY, SCALE, K_NN, CLOSENESS)
+final_image_name = 'Density{0} Scale{1} Knn{2} Closeness{3} interactive.jpg'.format(
+                                                X_DENSITY, SCALE, K_NN, CLOSENESS)
+
+FINAL_IMAGE = None
 
 Cell = namedtuple('Cell', ['name', 'pix4', 'pix1'])
 
@@ -92,7 +95,7 @@ class ColorDict(object):
     ##Also ends up counting directories as files...
     totNum = len(os.listdir(PICTURE_DIR))
 
-    im = Image.open(PICTURE_DIR + "/" + os.listdir(PICTURE_DIR)[0])
+    im = PillowImage.open(PICTURE_DIR + "/" + os.listdir(PICTURE_DIR)[0])
     MEDIA_WIDTH = im.width
     MEDIA_HEIGHT = im.height
     im.close()
@@ -102,10 +105,10 @@ class ColorDict(object):
                    if x not in [cell.name for cell in self.kd_list]]
     #Iterate through files to build color data and add to dict
     for filename in new_files:
-      im = Image.open(PICTURE_DIR + "/" + filename)
+      im = PillowImage.open(PICTURE_DIR + "/" + filename)
       #However it's done, it needs to end up with 4 colored quadrants
-      im = im.resize((2, 2), Image.LANCZOS)
-      im2 = im.resize((1, 1), Image.LANCZOS)
+      im = im.resize((2, 2), PillowImage.LANCZOS)
+      im2 = im.resize((1, 1), PillowImage.LANCZOS)
       #self.dict[filename] = list(im.getdata())
       #self.kd_list.extend(filename)
       self.kd_list.append(Cell(filename, list(im.getdata()), im2.getpixel((0,0))))
@@ -120,42 +123,10 @@ class ColorDict(object):
 
     #print self.kd_tree
 
-
-#TODO if final img large, split into quads with another for loop
-def display_final_img(final_dict):
-  #im = Image.open(PICTURE_DIR + "/" + ******)
-  global NEW_MEDIA_HEIGHT, NEW_MEDIA_WIDTH
-  NEW_MEDIA_WIDTH *= SCALE
-  NEW_MEDIA_HEIGHT *= SCALE
-
-  print "Old:", MEDIA_WIDTH ,MEDIA_HEIGHT
-  print "New:", NEW_MEDIA_WIDTH, NEW_MEDIA_HEIGHT
-
-  final_width = (SCANNED_WIDTH * NEW_MEDIA_WIDTH) / 2
-  final_height = (SCANNED_HEIGHT * NEW_MEDIA_HEIGHT) / 2
-
-  final_image = Image.new("RGB", (final_width, final_height), (255, 255, 255))
-
-  print "Number of unigue cells: " + str(len(final_dict.keys()))
-  print "Assembling Final Picture:"
-
-  for tile, coords_list in final_dict.iteritems():
-    im = Image.open(PICTURE_DIR + "/" + tile)
-    im = im.resize((NEW_MEDIA_WIDTH, NEW_MEDIA_HEIGHT))
-    for xy in coords_list:
-      final_image.paste(im, (xy[0] * NEW_MEDIA_WIDTH, xy[1] * NEW_MEDIA_HEIGHT))
-    print ".",
-
-  #final_image.save("currentKD.jpg")
-  final_image.save(final_image_name)
-  final_image.show()
-  final_image.close()
-
-
 #Eventually do at sizes large enough where perspectives are
 ##easily divisible so perspectives stay relatively similar
 def pixelate_target():
-  im = Image.open(TARGET_PIC)
+  im = PillowImage.open(TARGET_PIC)
   global TARGET_WIDTH, MEDIA_PERSPECTIVE, NEW_MEDIA_HEIGHT, NEW_MEDIA_WIDTH
   global SCANNED_HEIGHT, SCANNED_WIDTH
 
@@ -168,8 +139,8 @@ def pixelate_target():
   NEW_MEDIA_HEIGHT = int(NEW_MEDIA_WIDTH * MEDIA_PERSPECTIVE) #b
   print NEW_MEDIA_WIDTH, NEW_MEDIA_HEIGHT
 
-  im2 = im.resize((2 * X_DENSITY, 2 * int(im.height / NEW_MEDIA_HEIGHT)), Image.LANCZOS)
-  im3 = im2.resize((X_DENSITY, int(im.height / NEW_MEDIA_HEIGHT)), Image.LANCZOS)
+  im2 = im.resize((2 * X_DENSITY, 2 * int(im.height / NEW_MEDIA_HEIGHT)), PillowImage.LANCZOS)
+  im3 = im2.resize((X_DENSITY, int(im.height / NEW_MEDIA_HEIGHT)), PillowImage.LANCZOS)
   print im2
 
   SCANNED_WIDTH = im2.width
@@ -211,6 +182,7 @@ def closest_pic(node_list, target_tup):
   closest_list = list(sorted(new_dict.items()))
 
   if closest_list[1][0] - closest_list[0][0] > CLOSENESS:
+    #returns the 4 closest nodes if diff is too great
     return [tup[1] for tup in closest_list[:4]]
   else:
     return closest_list[0][1].filename
@@ -253,19 +225,66 @@ def find_matches(media_tree, target_array, target_array_small):
         except Exception as e:
           final_name_dict[tile_title] = [(x/2, y/2)]
       else:
+        #return dict of xy coords and 4 
         inter_dict[(x/2, y/2)] = tile_title
 
     if x % (len(target_array) / 10) == 0: print ".",
   
   print "\n"
   #print final_name_dict.keys()
-  return final_name_dict
+  return (final_name_dict, inter_dict)
 
+def create_img_template():
+  global NEW_MEDIA_HEIGHT, NEW_MEDIA_WIDTH, FINAL_IMAGE
+  NEW_MEDIA_WIDTH *= SCALE
+  NEW_MEDIA_HEIGHT *= SCALE
+
+  print "Old:", MEDIA_WIDTH ,MEDIA_HEIGHT
+  print "New:", NEW_MEDIA_WIDTH, NEW_MEDIA_HEIGHT
+
+  final_width = (SCANNED_WIDTH * NEW_MEDIA_WIDTH) / 2
+  final_height = (SCANNED_HEIGHT * NEW_MEDIA_HEIGHT) / 2
+
+  FINAL_IMAGE = PillowImage.new("RGB", (final_width, final_height), (255, 255, 255))
+
+
+#TODO if final img large, split into quads with another for loop
+def final_img_build(final_dict):
+  #im = PillowImage.open(PICTURE_DIR + "/" + ******)
+  print "Number of unigue cells: " + str(len(final_dict.keys()))
+  print "Assembling Final Picture:"
+
+  for tile, coords_list in final_dict.iteritems():
+    im = PillowImage.open(PICTURE_DIR + "/" + tile)
+    im = im.resize((NEW_MEDIA_WIDTH, NEW_MEDIA_HEIGHT))
+    for xy in coords_list:
+      FINAL_IMAGE.paste(im, (xy[0] * NEW_MEDIA_WIDTH, xy[1] * NEW_MEDIA_HEIGHT))
+    print ".",
+
+  #FINAL_IMAGE.save("currentKD.jpg")
+
+def save_img():
+  FINAL_IMAGE.save(final_image_name)
+  FINAL_IMAGE.show()
+
+def interactive_fill(fill_array, todo_dict):
+  #open tkinter main window
+  master = Tk()
+  #create 4 partitions on the bottom and one on top
+
+  #assign names/values to bottome buttons
+  for coord, nodes in todo_dict:
+    pass
+    #open 4 images, resize to show in window
+    #show portion of original image
+    #user selects desired picture
+    #prints desired cell in FINAL_IMAGE
 
 
 def main():
   start_time = time.time()
   sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+  global TARGET_PIC, PICTURE_DIR
   options = sys.argv
   if len(options) > 2:
     TARGET_PIC = len[1]
@@ -277,12 +296,19 @@ def main():
   #TODO: pixelate_target should be passed the target location instead of assuming
   targets_ntup = pixelate_target()
 
-  final_array = find_matches(color_dict.kd_tree, targets_ntup.big, targets_ntup.small)
+  final = find_matches(color_dict.kd_tree, targets_ntup.big, targets_ntup.small)
+  final_array = final[0]
+  final_dict = final[1]
+
+
+  create_img_template()
 
   print("--- %s seconds ---" % (time.time() - start_time))
 
-  display_final_img(final_array)
+  final_img_build(final_array)
+  interactive_fill(final_array, final_dict)
 
+  save_img()
   print("--- %s seconds ---" % (time.time() - start_time))
 
 if __name__ == '__main__':
