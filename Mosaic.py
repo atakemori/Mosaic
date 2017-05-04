@@ -37,11 +37,11 @@ SCANNED_WIDTH = -1
 SCANNED_HEIGHT = -1
 
 
-X_DENSITY =200
+X_DENSITY =10
 
 SCALE = 5 # double x_density is full-scale?
 
-K_NN = 10
+K_NN = 50
 
 final_image_name = 'Density{0} Scale{1} Knn{2} KDTree.jpg'.format(X_DENSITY, SCALE, K_NN)
 

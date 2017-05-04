@@ -35,7 +35,7 @@ SCANNED_HEIGHT = -1
 
 X_DENSITY = 100
 
-SCALE = 1 # double x_density is full-scale?
+SCALE = 5 # double x_density is full-scale?
 
 final_image_name = 'Density{0} Scale{1} Original.jpg'.format(X_DENSITY, SCALE)
 
