@@ -18,6 +18,7 @@ import PIL
 from PIL import Image
 from collections import namedtuple
 import time
+import pp
 
 import kdTree
 
@@ -43,7 +44,7 @@ SCALE = 5 # double x_density is full-scale?
 
 K_NN = 10
 
-final_image_name = 'Density{0} Scale{1} Knn{2} KDTree.jpg'.format(X_DENSITY, SCALE, K_NN)
+final_image_name = 'Density{0} Scale{1} Knn{2} Parallel.jpg'.format(X_DENSITY, SCALE, K_NN)
 
 Cell = namedtuple('Cell', ['name', 'pix4', 'pix1'])
 
@@ -222,18 +223,19 @@ def closest_pic_orig(node_list, target_tup):
 
 
 #   media_dict.get(num, data[min(data.keys(), key=lambda k: abs(k-num))])
-def find_matches(media_tree, target_array, target_array_small):
+def find_matches(media_tree, target_array, target_array_small, start, k_nn):
   final_name_array = [[0 for y in range(len(target_array[0]) / 2)]
                          for y in range(len(target_array) / 2)]
   final_name_dict = {}
   print "Analyzing Matches:",
-  for x in range(len(target_array))[::2]:
-    for y in range(len(target_array[0]))[::2]:
+  chunk = len(target_array) / 2
+  for x in range(chunk * start, chunk * (start + 1), 2):
+    for y in range(0, len(target_array[0]), 2):
       a = (target_array[x][y], target_array[x+1][y],
            target_array[x][y+1], target_array[x+1][y+1])
       b = target_array_small[x/2][y/2]
       #Gets closest node based on single pixel
-      closest_list_tups = kdTree.find_closest(media_tree, b, K_NN)
+      closest_list_tups = kdTree.find_closest(media_tree, b, k_nn)
       closest_nodes = [tup.node for tup in closest_list_tups]
       #Gets name after running closest nodes through old comparer 
       tile_title = closest_pic(closest_nodes, a)
@@ -263,11 +265,17 @@ def main():
   #TODO: pixelate_target should be passed the target location instead of assuming
   targets_ntup = pixelate_target()
 
-  final_array = find_matches(color_dict.kd_tree, targets_ntup.big, targets_ntup.small)
+  job_server = pp.Server()
+  tree = color_dict.kd_tree
 
+  final_array0 = job_server.submit(find_matches, (tree, targets_ntup.big, targets_ntup.small,0,K_NN,), (closest_pic,), ("numpy", "kdTree",))
+  final_array1 = job_server.submit(find_matches, (tree, targets_ntup.big, targets_ntup.small,1,K_NN,), (closest_pic,), ("numpy", "kdTree",))
+  #final_array2 = job_server.submit(find_matches, (tree, targets_ntup.big, targets_ntup.small,2,K_NN,), (closest_pic,), ("numpy", "kdTree",))
+  #final_array3 = job_server.submit(find_matches, (tree, targets_ntup.big, targets_ntup.small,3,K_NN,), (closest_pic,), ("numpy", "kdTree",))
+  final_array1()
   print("--- %s seconds ---" % (time.time() - start_time))
 
-  display_final_img(final_array)
+  display_final_img(final_array1())
 
   print("--- %s seconds ---" % (time.time() - start_time))
 
