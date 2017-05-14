@@ -37,14 +37,17 @@ NEW_MEDIA_HEIGHT = "b"
 SCANNED_WIDTH = -1
 SCANNED_HEIGHT = -1
 
+NCORES = 1
 
-X_DENSITY =300
+
+X_DENSITY =40
 
 SCALE = 5 # double x_density is full-scale?
 
-K_NN = 10
+K_NN = 5
 
-final_image_name = 'Density{0} Scale{1} Knn{2} Parallel.jpg'.format(X_DENSITY, SCALE, K_NN)
+final_image_name = 'Cores{3} Density{0} Scale{1} Knn{2} Parallel.jpg'.format(
+  X_DENSITY, SCALE, K_NN, NCORES)
 
 Cell = namedtuple('Cell', ['name', 'pix4', 'pix1'])
 
@@ -223,12 +226,12 @@ def closest_pic_orig(node_list, target_tup):
 
 
 #   media_dict.get(num, data[min(data.keys(), key=lambda k: abs(k-num))])
-def find_matches(media_tree, target_array, target_array_small, start, k_nn):
+def find_matches(media_tree, target_array, target_array_small, start, k_nn, n_cores = 1):
   final_name_array = [[0 for y in range(len(target_array[0]) / 2)]
                          for y in range(len(target_array) / 2)]
   final_name_dict = {}
   print "Analyzing Matches:",
-  chunk = len(target_array) / 2
+  chunk = len(target_array) / n_cores
   for x in range(chunk * start, chunk * (start + 1), 2):
     for y in range(0, len(target_array[0]), 2):
       a = (target_array[x][y], target_array[x+1][y],
@@ -253,29 +256,49 @@ def find_matches(media_tree, target_array, target_array_small, start, k_nn):
 
 def main():
   start_time = time.time()
-  sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
   options = sys.argv
+  sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+  global NCORES, TARGET_PIC, PICTURE_DIR, final_image_name
+  if len(options) > 1:
+    NCORES = int(options[1])
+    final_image_name = final_image_name[:5] + str(NCORES) + final_image_name[6:]
   if len(options) > 2:
-    TARGET_PIC = len[1]
+    TARGET_PIC = options[2]
   if len(options) > 3:
-    PICTURE_DIR = len[2]
+    PICTURE_DIR = options[3]
 
   color_dict = ColorDict()
 
   #TODO: pixelate_target should be passed the target location instead of assuming
   targets_ntup = pixelate_target()
 
-  job_server = pp.Server()
   tree = color_dict.kd_tree
 
-  final_array0 = job_server.submit(find_matches, (tree, targets_ntup.big, targets_ntup.small,0,K_NN,), (closest_pic,), ("numpy", "kdTree",))
-  final_array1 = job_server.submit(find_matches, (tree, targets_ntup.big, targets_ntup.small,1,K_NN,), (closest_pic,), ("numpy", "kdTree",))
-  #final_array2 = job_server.submit(find_matches, (tree, targets_ntup.big, targets_ntup.small,2,K_NN,), (closest_pic,), ("numpy", "kdTree",))
-  #final_array3 = job_server.submit(find_matches, (tree, targets_ntup.big, targets_ntup.small,3,K_NN,), (closest_pic,), ("numpy", "kdTree",))
-  final_array1()
+  
+  job_server = pp.Server()
+  server_results = []
+  print NCORES
+  for i in range(NCORES):
+    server_results.append(job_server.submit(find_matches, (tree, targets_ntup.big,
+      targets_ntup.small,i,K_NN,NCORES,), (closest_pic,), ("numpy", "kdTree",)))
+
+  final_array = {}
+  core_dict_list = [dict2() for dict2 in server_results]
+  for core_dict in core_dict_list:
+    CORE_items = core_dict.items()
+    for key, value in CORE_items:
+      try:
+        final_array[key].extend(value)
+      except Exception as e:
+        final_array[key] = value
+
+
+  #final_array0 = job_server.submit(find_matches, (tree, targets_ntup.big, 
+    #targets_ntup.small,0,K_NN,), (closest_pic,), ("numpy", "kdTree",))
+
   print("--- %s seconds ---" % (time.time() - start_time))
 
-  display_final_img(final_array1())
+  display_final_img(final_array)
 
   print("--- %s seconds ---" % (time.time() - start_time))
 
