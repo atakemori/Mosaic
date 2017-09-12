@@ -5,3 +5,5 @@ results
 media_dict.p
 *.p
 *.pyc
+githubMosaic.py
+Mosaic.sublime-workspace

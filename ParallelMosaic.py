@@ -6,8 +6,6 @@
 """
 Currently only will take images with the same size
 """
-
-
 import sys
 import os
 import random
@@ -22,12 +20,8 @@ import pp
 
 import kdTree
 
-
-
 PICTURE_DIR = "./media"
 TARGET_PIC = "./target.jpg"
-MEDIA_HEIGHT = -1
-MEDIA_WIDTH = -1
 
 TARGET_WIDTH = "a"
 MEDIA_PERSPECTIVE = "c"
@@ -36,39 +30,18 @@ NEW_MEDIA_HEIGHT = "b"
 
 SCANNED_WIDTH = -1
 SCANNED_HEIGHT = -1
+MEDIA_HEIGHT = -1
+MEDIA_WIDTH = -1
 
 NCORES = 1
-
-
-X_DENSITY =40
-
-SCALE = 5 # double x_density is full-scale?
-
+X_DENSITY =20
+SCALE = 2 # double x_density is full-scale?
 K_NN = 5
 
 final_image_name = 'Cores{3} Density{0} Scale{1} Knn{2} Parallel.jpg'.format(
   X_DENSITY, SCALE, K_NN, NCORES)
 
 Cell = namedtuple('Cell', ['name', 'pix4', 'pix1'])
-
-
-class ImageBox(object):
-  """
-  "Takes in an image and returns tuples that correspond
-  "to the coordinates required for quandrants and edges
-  """
-  def __init__(self, media_image):
-    im = media_image
-    self.topLeftX = 0
-    self.topLeftY = 0
-    self.botRightX = im.width
-    self.botRightY = im.height
-
-  def botRightQuad(self):
-    return ((self.botRightX / 2, self.botRightY / 2, 
-            self.botRightX, self.botRightY))
-
-
 
 #may not need to be an object
 class ColorDict(object):
@@ -80,7 +53,6 @@ class ColorDict(object):
     self.kd_list = []
     self.kd_tree = None
     global MEDIA_HEIGHT, MEDIA_WIDTH
-
     try:
       self.kd_tree = pickle.load(open("kd_tree.p", "rb"))
       self.kd_list = pickle.load(open("kd_list.p", "rb")) #might take too long
@@ -98,7 +70,6 @@ class ColorDict(object):
     MEDIA_HEIGHT = im.height
     im.close()
 
-
     new_files = [x for x in os.listdir(PICTURE_DIR)
                    if x not in [cell.name for cell in self.kd_list]]
     #Iterate through files to build color data and add to dict
@@ -107,11 +78,8 @@ class ColorDict(object):
       #However it's done, it needs to end up with 4 colored quadrants
       im = im.resize((2, 2), Image.LANCZOS)
       im2 = im.resize((1, 1), Image.LANCZOS)
-      #self.dict[filename] = list(im.getdata())
-      #self.kd_list.extend(filename)
       self.kd_list.append(Cell(filename, list(im.getdata()), im2.getpixel((0,0))))
       print "+",
-    #print self.kd_list
 
     if len(new_files) > 0:
       self.kd_tree = kdTree.kdtree(self.kd_list)
@@ -119,12 +87,8 @@ class ColorDict(object):
       pickle.dump(self.kd_list, open("kd_list.p", "wb"))
       print "Media Dictionary Updated"
 
-    #print self.kd_tree
-
-
 #TODO if final img large, split into quads with another for loop
 def display_final_img(final_dict):
-  #im = Image.open(PICTURE_DIR + "/" + ******)
   global NEW_MEDIA_HEIGHT, NEW_MEDIA_WIDTH
   NEW_MEDIA_WIDTH *= SCALE
   NEW_MEDIA_HEIGHT *= SCALE
@@ -146,11 +110,8 @@ def display_final_img(final_dict):
     for xy in coords_list:
       final_image.paste(im, (xy[0] * NEW_MEDIA_WIDTH, xy[1] * NEW_MEDIA_HEIGHT))
     print ".",
-
-  #final_image.save("currentKD.jpg")
   final_image.save(final_image_name)
   final_image.show()
-
 
 #Eventually do at sizes large enough where perspectives are
 ##easily divisible so perspectives stay relatively similar
@@ -224,7 +185,6 @@ def closest_pic_orig(node_list, target_tup):
 
   return list(sorted(new_dict.items()))[0][1]
 
-
 #   media_dict.get(num, data[min(data.keys(), key=lambda k: abs(k-num))])
 def find_matches(media_tree, target_array, target_array_small, start, k_nn, n_cores = 1):
   final_name_array = [[0 for y in range(len(target_array[0]) / 2)]
@@ -249,10 +209,7 @@ def find_matches(media_tree, target_array, target_array_small, start, k_nn, n_co
     if x % (len(target_array) / 10) == 0: print ".",
   
   print "\n"
-  #print final_name_dict.keys()
   return final_name_dict
-
-
 
 def main():
   start_time = time.time()
@@ -268,12 +225,9 @@ def main():
     PICTURE_DIR = options[3]
 
   color_dict = ColorDict()
-
   #TODO: pixelate_target should be passed the target location instead of assuming
   targets_ntup = pixelate_target()
-
   tree = color_dict.kd_tree
-
   
   job_server = pp.Server()
   server_results = []
@@ -291,15 +245,11 @@ def main():
         final_array[key].extend(value)
       except Exception as e:
         final_array[key] = value
-
-
   #final_array0 = job_server.submit(find_matches, (tree, targets_ntup.big, 
     #targets_ntup.small,0,K_NN,), (closest_pic,), ("numpy", "kdTree",))
 
   print("--- %s seconds ---" % (time.time() - start_time))
-
   display_final_img(final_array)
-
   print("--- %s seconds ---" % (time.time() - start_time))
 
 if __name__ == '__main__':
