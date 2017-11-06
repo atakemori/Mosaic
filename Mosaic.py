@@ -22,12 +22,14 @@ import time
 import kdTree
 
 
-
+#Media dir and target img location
 PICTURE_DIR = "./media"
 TARGET_PIC = "./target.jpg"
+#Temporary placeholder values set at -1 pixels
 MEDIA_HEIGHT = -1
 MEDIA_WIDTH = -1
 
+#idr
 TARGET_WIDTH = "a"
 MEDIA_PERSPECTIVE = "c"
 NEW_MEDIA_WIDTH = "d"
@@ -36,15 +38,19 @@ NEW_MEDIA_HEIGHT = "b"
 SCANNED_WIDTH = -1
 SCANNED_HEIGHT = -1
 
+#Number of picture cells along bottom of finished mosaic
+X_DENSITY =40
 
-X_DENSITY =300
-
+#Some scaling number, still not sure how it works
 SCALE = 5 # double x_density is full-scale?
 
+#Number of nearest neighbors it should search for for each cell
 K_NN = 10
 
+#Naming scheme for finished mosaics
 final_image_name = 'Density{0} Scale{1} Knn{2} KDTree.jpg'.format(X_DENSITY, SCALE, K_NN)
 
+#Named tuple to easily pass results
 Cell = namedtuple('Cell', ['name', 'pix4', 'pix1'])
 
 
